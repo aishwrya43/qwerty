@@ -1,0 +1,462 @@
+==================================================================
+***********PROCEDURES***************
+==================================================================
+
+create or replace procedure hello as
+begin
+dbms_output.put_line('Hello All');
+end;
+/
+
+To Execute Procedure 
+'''''''''''''''''''''''''''''''''''''''''''
+
+execute hello;
+
+begin
+hello;
+end;
+/
+***************************************************************************************
+
+program1
+
+	create or replace procedure salary as
+		v_sal emp.sal%type;
+	begin
+		select sal into v_sal from emp where empno=7;
+		dbms_output.put_line('sal= '||v_sal);
+	end;
+	/
+
+execute salary;
+*******************************************************************************************
+program2
+
+	create or replace procedure salary as
+		v_sal emp.sal%type;
+	begin
+		select sal into v_sal from emp where empno=7;
+		dbms_output.put_line('sal= '||v_sal);
+	exception
+		when no_data_found then
+		dbms_output.put_line('No emp available ');
+	end;
+	/
+execute salary;
+*******************************************************************************************
+program3
+
+	create or replace procedure salary as
+		v_sal emp.sal%type;
+	begin
+		select sal into v_sal from emp where empno=7839;
+		dbms_output.put_line('sal= '||v_sal);
+		if v_sal > 20000 then
+		dbms_output.put_line('Greater than 20000 ');
+		else
+		dbms_output.put_line('Less than 20000 ');
+		end if;
+	exception
+		when no_data_found then
+		dbms_output.put_line('No emp available ');
+	end;
+	/
+execute salary;
+*******************************************************************************************
+program4
+
+	create or replace procedure salary(emp_no number) as
+		v_sal emp.sal%type;
+	begin
+		select sal into v_sal from emp where empno=emp_no;
+		dbms_output.put_line('sal= '||v_sal);
+		if v_sal > 20000 then
+		dbms_output.put_line('Greater than 20000 ');
+		else
+		dbms_output.put_line('Less than 20000 ');
+		end if;
+	exception
+		when no_data_found then
+		dbms_output.put_line('No emp available ');
+	end;
+	/
+
+execute salary(7839);
+
+declare
+emp_no emp.empno%type:=&num;
+begin
+salary(emp_no);
+end;
+/
+*******************************************************************************************
+program5
+
+	create or replace procedure salary(dept_no number) as
+		 cursor c_emp is select * from emp where deptno=dept_no;
+	       	 v_emp c_emp%rowtype;
+		 emp exception;
+		r number;
+	begin
+	       	 open c_emp;
+	       	 dbms_output.put_line('emp from deptno '||dept_no);
+	     	 loop
+	      	          fetch c_emp into v_emp;
+	       	         exit when c_emp%notfound;
+	        	         dbms_output.put_line('ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+		         r:=c_emp%rowcount;
+	       	 end loop;
+		 if r=0 then
+		raise emp;
+		end if;
+
+	exception
+		when emp then
+		dbms_output.put_line('No emp available ');
+	end;
+	/
+
+execute salary(50);
+
+declare
+dept_no emp.deptno%type:=&num;
+begin
+salary(dept_no);
+end;
+/
+
+*******************************************************************************************
+program6
+
+	create or replace procedure salary(emp_no number,v_sal out number) as
+	begin
+		select sal into v_sal from emp where empno=emp_no;
+		dbms_output.put_line('sal= '||v_sal);
+		if v_sal > 20000 then
+		dbms_output.put_line('Greater than 20000 ');
+		else
+		dbms_output.put_line('Less than 20000 ');
+		end if;
+	exception
+		when no_data_found then
+		dbms_output.put_line('No emp available ');
+	end;
+	/
+
+execute salary(50);
+
+declare
+v_sal1 emp.sal%type;
+emp_no emp.empno%type:=&num;
+begin
+salary(emp_no, v_sal1);
+dbms_output.put_line('Salary '||v_sal1);
+end;
+/
+
+*******************************************************************************************
+program7  IN
+
+	create or replace procedure salary(emp_no number,v_sal in out number) as
+	begin
+		dbms_output.put_line('sal_one= '||v_sal);
+		select sal into v_sal from emp where empno=emp_no;
+		dbms_output.put_line('sal= '||v_sal);
+		if v_sal > 20000 then
+		dbms_output.put_line('Greater than 20000 ');
+		else
+		dbms_output.put_line('Less than 20000 ');
+		end if;
+	exception
+		when no_data_found then
+		dbms_output.put_line('No emp available ');
+	end;
+	/
+
+execute salary(50);
+
+declare
+v_sal emp.sal%type:=1000;
+emp_no emp.empno%type:=&num;
+begin
+salary(emp_no, v_sal);
+dbms_output.put_line('Salary '||v_sal);
+end;
+/
+
+
+*******************************************************************************************
+program8
+
+	create or replace function getSalary(emp_no number) return number as
+		v_sal emp.sal%type;
+	begin
+		select sal into v_sal from emp where empno=emp_no;
+		dbms_output.put_line('sal= '||v_sal);
+		if v_sal > 20000 then
+		dbms_output.put_line('Greater than 20000 ');
+		else
+		dbms_output.put_line('Less than 20000 ');
+		end if;
+		return v_sal;
+	exception
+		when no_data_found then
+		dbms_output.put_line('No emp available ');
+	end;
+	/
+
+execute salary(7839);
+
+declare
+emp_no emp.empno%type:=&num;
+begin
+getSalary(emp_no);
+end;
+/
+
+*******************************************************************************************
+program9
+
+*******************************************************************************************
+program10
+  
+select getSalary(7788) from dual;
+
+create or replace procedure sal_dis(p_empno emp.empno%type) as
+	v_sal emp.sal%type;
+begin
+	v_sal:=getSalary(p_empno);
+	if v_sal > 10000 then
+		update emp set sal=sal+1000 where empno=p_empno;
+	else
+		update emp set sal=sal+2000 where empno=p_empno;
+	end if;
+end;
+/
+
+execute sal_dis(7788);
+
+*******************************************************************************************
+program11
+
+select getSalary(7788) from dual;
+
+create or replace procedure sal_dis(p_empno emp.empno%type) as
+begin
+	if getSalary(p_empno) > 10000 then
+		update emp set sal=sal+1000 where empno=p_empno;
+	else
+		update emp set sal=sal+2000 where empno=p_empno;
+	end if;
+end;
+/
+
+execute sal_dis(7788); 
+*******************************************************************************************
+program12
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+====================================================================================
+******************ASSIGNMENT*****************
+====================================================================================
+Practice 1
+
+•	Create a procedure called USER_QUERY_EMP that accepts three parameters. Parameter p_myeno is of IN parameter mode which provides the employee_id value. The other two parameters p_myjob and p_mysal are of OUT mode. The procedure retrieves the salary and job_id of an employee with the provided employee_id and assigns those to the two OUT parameters respectively. The procedure should handle the error if the employee_id does not exist in the EMPLOYEES table by displaying an appropriate message. Use bind variables for the two OUT Parameters.
+•	Compile the code, invoke the procedure, and display the salary and job title for employee number 200. Do the same for employee number 120.
+======>>>>>
+
+create or replace procedure USER_QUERY_EMP(p_myeno emp.empno%type, p_myjob out number, p_mysal out number) as
+
+begin
+	select job,sal into p_myjob ,p_mysal  from emp where empno=p_myeno;
+end;
+/
+************************************************************************************************
+Practice 2
+
+•	Create a function named USER_ANNUAL_COMP that has three parameters p_eno, p_sal and p_comm for passing on the values of an employee_id, the current salary and commission of the employee respectively. The function calculates and returns the annual compensation of the employee by using the following formula.
+     annual_compensation =  (p_sal+p_comm)*12
+      If the salary or commission value is NULL then zero should be substituted for it. 
+•	Give a call to USER_ANNUAL_COMP from a SELECT statement, against the EMPLOYEES table.
+===========>
+
+create or replace function USER_ANNUAL_COMP( p_eno emp.empno%type ) return number as
+	p_sal emp.sal%type ;
+	p_comm emp.comm%type;
+	annual_compensation number;
+begin
+	select nvl(sal,0), nvl(comm,0) into p_sal,p_comm from emp where empno=p_eno;
+	annual_compensation:=(p_sal+p_comm)*12;
+	return annual_compensation;
+exception
+	when no_data_found then
+	dbms_output.put_line('Invalid employee number');
+end;
+/
+
+declare
+	eno emp.empno%type:=&empno;
+	annam number;
+begin
+	select USER_ANNUAL_COMP(eno) into annam from dual;
+	dbms_output.put_line('Annam= '||annam);
+end;
+/
+*************************************************************************************************
+Practice 3
+
+•	Create a function named USER_VALID_DEPTNO that has a single parameter p_dno to accept a department number and returns a BOOLEAN value. The function returns TRUE if the department number exists in the DEPARTMENTS table else it returns FALSE.
+•	Create a procedure named SHOW_STRENGTH that accepts department number in a single parameter p_deptno from user. The procedure gives a call to USER_VALID_DEPTNO. If the function returns TRUE then the procedure finds out how many employees are there in the department from the EMPLOYEES table and displays the same on the screen. If the function returns FALSE then the procedure displays an appropriate error message.
+•	Give call to SHOW_STRENGTH by passing on department number 10. Do the same for department number 76
+======>
+
+create or replace function USER_VALID_DEPTNO(p_dno dept.deptno%type) return boolean as
+	ct number;
+begin
+	select count(*)  into ct from dept where deptno=p_dno;
+	if ct is not null then
+		return true;
+	else
+		return false;
+	end if;
+end;
+/
+
+create or replace procedure SHOW_STRENGTH(p_deptno dept.deptno%type) as
+	ct number;
+begin
+	if USER_VALID_DEPTNO(p_deptno) then
+		select count(*) into ct from emp where deptno=p_deptno;
+	else
+		dbms_output.put_line('No employee found or invalid deptno');	
+	end if;
+end;
+/
+
+declare
+	p_deptno dept.deptno%type:=&num;	
+begin
+	SHOW_STRENGTH(p_deptno);
+end;
+/
+
+execute SHOW_STRENGTH(10);
+
+*************************************************************************************************
+Practice 4
+•	Create a procedure named SHOW_RECORDS that accepts a single parameter p_join_date. The procedure determines and displays on the screen, the details of the employees who have joined after p_join_date, in the following format. 
+Employees Joined after ddth, Month yyyy
+
+EMPLOYEE FIRST NAME		JOB		SALARY	DEPARTMENT 
+_____________________________________________________________
+
+XXXXXXXX			XXXXX		99,999		  99
+XXXXXXXX			XXXXX		99,999		  99
+
+
+
+The procedure should display appropriate message if there is no employee who joined after p_join_date .
+•	Give a call to SHOW_RECORDS from an anonymous PL/SQL block 
+
+
+======>
+
+create or replace procedure SHOW_RECORDS(p_join_date emp.hiredate%type) as
+	
+	cursor c is select * from emp where hiredate > p_join_date;
+begin
+	dbms_output.put_line('Ename          job            salary        dept');
+	for v in c
+	loop
+	dbms_output.put_line(v.ename||'        '||v.job||'        '||v.sal||'        '||v.deptno);
+	end loop;	
+end;
+/
+
+execute SHOW_RECORDS('20-FEB-81');
+**************************************************************************************************
+Practice 5
+
+•	Create a procedure named ADD_EMPLOYEE to hire an employee. Parameters to the procedure are job_id, manager_id, hire_date, salary, commission and department_id. Validate the following:
+
+a. Employee number is not taken as a parameter but is auto generated by using a SEQUENCE. 
+b. Job is either ‘Programmer’ or ‘Accountant’ or ‘Public Accountant’. The input value can be entered in any case.
+c. Manager is an existing employee.
+d. Hiredate is less than system date.
+e. Salary must be greater than 800
+f. Commission is not null if the job is ‘Accountant’. For any other job, commission is null.
+g. Department_id must exist in the DEPARTMENTS table.
+Insert the record if the above validations are met and display a message ‘1 row inserted’. If the row is not inserted generate an exception and handle it by displaying an appropriate message. 
+•	Give a call to ADD_EMPLOYEE through an anonymous PL/SQL block
+==========>>
+create or replace procedure ADD_EMPLOYEE(empnum emp.empno%type, name emp.ename%typejob_id number,manager_id number, hire_date date, salary number, commission number, dept_id number ) as
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

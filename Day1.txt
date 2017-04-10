@@ -1,0 +1,359 @@
+Two Types of block:
+
+1) UnNamed
+2) Named --> eg. procedure, function,package
+
+1) UnNamed
+
+	declare
+	----------     (declaration scalar var, composit var, 
+                    ----------               cursor, exception)
+	
+	begin
+	----------
+	----------
+	exception
+	----------
+	----------
+	end;
+
+
+      i number;
+      i number:=10;
+
+***********set serveroutput on************
+
+program1
+ 
+	declare
+	i number:=10
+	begin 
+	dbms_output.put_line('Value of i is '||i); 
+	 end; 
+	 /
+
+program2
+
+	declare
+	i number:=&num1;
+	j number:=&num2;
+                    addition number;
+	begin
+	addition:=i+j;
+                    dbms_output.put_line('Addition of numbers is '||addition);
+	end;
+                     /
+
+program3
+
+	declare
+	v_name varchar2(20);
+	v_sal number;
+                    v_empid number :=&eno;
+	begin
+	select ename,sal into v_name, v_sal from emp where empno=v_empid;
+	dbms_output.put_line('name '||v_name);
+                    dbms_output.put_line('salary  '||v_sal);
+	end;
+                     /
+
+program4
+                   ----------------------------------------------------------------------
+	 variablename tablename.columnname%type
+	----------------------------------------------------------------------
+  
+	declare
+	v_name emp.ename%type;
+	v_sal emp.sal%type;
+                    v_empid number :=&eno;
+	begin
+	select ename,sal into v_name, v_sal from emp where empno=v_empid;
+	dbms_output.put_line('name '||v_name);
+                    dbms_output.put_line('salary  '||v_sal);
+	end;
+                     /
+	
+
+program5 
+	----------------------------------------------------------------------
+	 variablename tablename%rowtype
+	----------------------------------------------------------------------
+  
+	declare
+	Rec_emp emp%rowtype;
+                    v_empid number :=&eno;
+	begin
+	select * into Rec_emp from emp where empno=v_empid;
+	dbms_output.put_line('name '||Rec_emp.ename);
+                    dbms_output.put_line('salary  '||Rec_emp.sal);
+	end;
+                     /
+
+	
+program6
+	------------------------------------------------------------------------
+	if then----- else----- end if condition
+	--------------------------------------------------------------------------
+
+	declare
+	a number :=&num1;
+	begin
+                    if (mod(a,2)=0) then
+	            dbms_output.put_line(a||' is even number');
+	else
+	            dbms_output.put_line(a||' is odd number');
+	end if;
+          	end;
+	/																
+program7
+	------------------------------------------------------------------------
+	if then----- elsf------- elsf-----else----- end if condition
+	--------------------------------------------------------------------------
+
+	declare
+	a number :=&num1;
+	b number :=&num2;
+	c number :=&num3;
+	begin
+                    if (a>b and a>c) then
+	            dbms_output.put_line(a||' is max number');
+	elsif (b>c) then
+	            dbms_output.put_line(b||' is max number');
+	else
+	            dbms_output.put_line(c||' is max number');
+	end if;
+          	end;
+	/
+
+program8
+	------------------------------------------------------------------------
+	loop --------- exit when(condition)---end loop;
+	--------------------------------------------------------------------------
+	
+	declare
+	i number:=1;
+	begin
+	         loop
+		exit when(i>5);
+		dbms_output.put_line(i);
+		i:=i+1;
+	         end loop;
+	end;
+	/
+
+program9
+	------------------------------------------------------------------------
+	while (condition)---------loop ---------end loop;
+	--------------------------------------------------------------------------
+	
+	declare
+	i number:=1;
+	begin
+	         while (i<=5)
+		loop		
+		      dbms_output.put_line(i);
+		      i:=i+1;
+	         end loop;
+	end;
+	/
+
+
+program10
+	------------------------------------------------------------------------
+	for var in lower to upper----loop ---------end loop;
+	------------------------------------------------------------------------
+
+	begin
+	         for i in 1..5
+		loop		
+		      dbms_output.put_line(i);	     
+	         end loop;
+	end;
+	/
+	**********************************************Reverse
+	begin
+	         for i in reverse 1..5
+		loop		
+		      dbms_output.put_line(i);	     
+	         end loop;
+	end;
+	/
+***********************************************************************************************
+
+program11
+	--------------------------------------------------------------------------
+	variable maxsal number (Bind variable)
+	---------------------------------------------------------------------------
+	
+	variable maxsal number
+
+	begin
+	        select max(sal) into :maxsal from emp;
+	        dbms_output.put_line('Max salary is '||:maxsal);
+	end;
+	/
+
+
+program12
+	--------------------------------------------------------------------------
+	<<OUTER>>
+	---------------------------------------------------------------------------
+		
+	<<outer>>
+	declare
+	        str varchar2(30):='Hello';
+	begin
+	         declare
+	        	str varchar2(30):='Hi';
+		str1 varchar2(30):='World';
+	          begin
+	         	outer.str:=outer.str||str1;
+		str:=outer.str;
+		dbms_output.put_line(str);
+	          end;
+	          dbms_output.put_line(str);
+	 end;
+	/
+
+
+
+
+
+
+
+
+
+
+
+*******************************************************************************************
+*******************************************************************************************
+
+Q1.. Write program to list only even numbers from range of 1 to 20
+
+*******************************************************************************************
+	
+	
+	begin
+	    for i in 1..20
+                          loop
+		if (mod(i,2)=0)
+		then
+ 		     dbms_output.put_line(i);
+		end if;
+                         end loop;
+	end;
+	/
+
+
+
+Q2.. Prime Number
+
+******************************************************************************************	
+	declare
+	a number :=&num1;
+	cnt number:=0;
+	begin
+                    for i in 1..a
+	loop
+                    	if (mod(a,i)=0) then
+	            	           cnt:=cnt+1;
+		end if;
+	 end loop;   
+	if(cnt >2)
+	then        
+	            dbms_output.put_line(a||' is not prime number');
+	else
+		dbms_output.put_line(a||' is prime number');
+	end if;
+          	end;
+	/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+============================================================================================
+***********************ASSIGNMENT***************************
+============================================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

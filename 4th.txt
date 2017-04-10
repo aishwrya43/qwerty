@@ -1,0 +1,46 @@
+
+	declare
+	    empno1 number:=&empno1;
+	    empno2 number:=&empno2;
+	    n1 varchar2(20);
+	    n2 varchar2(20);
+	    k number:=0;
+    	l number:=0;
+		AD exception;
+	begin
+		
+		
+		    
+	    	begin
+		     select ename into n1 from emp where empno=empno1;
+		
+		     update emp set sal=sal*1.1 where empno=empno1;
+		  k:=1;
+		exception
+		     when no_data_found then
+
+		     dbms_output.put_line('First Employee id '|| empno1||' doesnt exist');
+		end;
+		
+
+
+		begin
+		     select ename into n2 from emp where empno=empno2;
+			
+		     update emp set sal=sal*1.2 where empno=empno2;
+		l:=1;
+		exception
+		     when no_data_found then
+		     dbms_output.put_line('Second Employee id  '|| empno2||' doesnt exist');
+		end;
+		
+
+		if k=0 and l=0 then
+	                           raise AD;
+		end if;
+	exception
+	     	when AD then
+		dbms_output.put_line('Both Employee ids doesnt exist');
+	    
+	end;
+	/

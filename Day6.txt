@@ -1,0 +1,489 @@
+************ORDBMS****************
+==========================================
+
+create or replace type emp_Address as object
+(street varchar2(40), city varchar2(40), country varchar2(40));
+/
+
+create table Person(pid number, pname varchar2(20), address emp_Address);
+
+insert into Person values(1,'Ravi', emp_Address('Hinjewadi','Pune','India'));
+
+insert into Person values(2,'Pari', emp_Address('Nigadi','Pune','India'));
+
+select * from Person;
+
+select p.pid, p.address.street from Person p ;
+
+select p.pid, p.pname,p.address.street,p.address.city,p.address.country from Person p ;
+
+update Person set address=emp_Address('Triveninagar','Pune','India') where pid=2;
+
+declare 
+add emp_Address;
+begin
+add:=emp_Address('Medha','Satara','India');
+update Person set address = add where pid=1;
+end;
+/
+***********************************************************************************************************
+MEMBER FUNCTION
+======================
+create or replace type emp_Address as object
+(street varchar2(40),
+ city varchar2(40), 
+ country varchar2(40),
+member function getCity return varchar2 );
+/
+
+create or replace type body emp_Address as
+	member function getCity return varchar2 is
+	begin 
+		return city;
+	end;
+end;
+/
+
+select p.address.getcity() from Person p where pid=1;
+************************************************************************************************************
+V-ARRAY
+=====================
+
+create type phone_no as varray(5) of number;
+/
+
+create table emp_v(empid number, ename varchar2(20), phone phone_no);
+
+insert into emp_v values(1,'Ravi', phone_no(9730816644,9730366347,9822132776));
+
+insert into emp_v values(2,'Pari', phone_no(9730810987,97303634567,98215902776));
+
+select * from emp_v where empid=1;
+
+declare
+	t_phone phone_no;
+begin
+	select phone into t_phone from emp_v where empid=1;
+	for x in 1..t_phone.count
+	loop
+		dbms_output.put_line('Phone no value= '||t_phone(x));
+	end loop;
+	dbms_output.put_line('First Phone no = '||t_phone(t_phone.first));
+	dbms_output.put_line('Last Phone no = '||t_phone(t_phone.last));
+	dbms_output.put_line('Second Phone no = '||t_phone(t_phone.next(t_phone.first)));
+end;
+/
+************************************************************************************************************
+create or replace procedure forModify(p_empid number, p_phone in out phone_no1) as
+ 	var number;
+begin
+	var:=p_phone.count;
+	p_phone.extend(1);
+	p_phone(var+1):=abc1('demo','demoPL');
+	update emp_v1 set phone=p_phone where empid=p_empid;
+	dbms_output.put_line('done');
+end;
+/
+
+declare
+	t_phone phone_no1;
+begin
+	select phone onto t_phone from emp_v1 where empid=1;
+	forModify(1,t_phone);
+end;
+/
+************************************************************************************************************
+
+NESTED TABLE
+
+create type Vehicle as object(vid number, vname varchar2(20));
+/
+create type vehicle_tab as table of Vehicle;
+/
+create table Person_data(pid number, pname varchar2(20), vehicle_details vehicle_tab) nested table vehicle_details store as vehicle_details_tab;
+
+insert into Person_data values(1, 'Priti', vehicle_tab(Vehicle(1,'alto'), Vehicle(2,'scooty')));
+
+insert into Person_data values(2, 'Ravi', vehicle_tab(Vehicle(1,'alto'), Vehicle(2,'scooty')));
+
+****************************************************************************************
+
+declare
+	new_vehicle vehicle_tab;
+begin
+	new_vehicle:=vehicle_tab(Vehicle(1,'first'), Vehicle(2,'second'));
+	update Person_data set vehicle_details=new_vehicle where pid=1;
+	dbms_output.put_line('updated');
+end;
+/
+
+****************************************************************************************
+
+declare
+	 l_name Person_data.pname%type;
+	 l_vehicle Person_data.vehicle_details%type;
+	cursor get_data is select pname, vehicle_details from Person_data;
+begin
+	open get_data;
+	loop
+		fetch get_data into   l_name,l_vehicle;
+	exit when get_data%notfound;
+	dbms_output.put_line('Person name=  '||l_name||'  and vehicles are ');
+	for x in 1..l_vehicle.count
+	loop
+		dbms_output.put_line(l_vehicle(x).vname);
+	end loop;
+	end loop;
+end;
+/
+
+update the(select vehicle_details from Person_data where pid=2) set vname='deo' where vid=2;
+
+insert into the(select vehicle_details from Person_data where pid=2) values(3,'SRT150');
+
+select * from Person_data;
+
+delete from the(select vehicle_details from Person_data where pid=2) where vid=2;
+
+**********************************************************************************************
+TRIGGERS
+
+create trigger tr_update_sal after update on emp
+begin
+dbms_output.put_line('Salary is updated from trigger');
+end;
+/
+
+update emp set sal=sal+1000 where empno=7900;
+
+
+create or replace trigger tr_update_sal after update on emp
+for each row
+begin
+dbms_output.put_line('Salary is updated from trigger');
+end;
+/
+
+update emp set sal=sal+1000 ;
+
+create or replace trigger tr_update_sal after update or insert or delete on emp
+for each row
+begin
+if inserting then
+dbms_output.put_line('inserting row');
+elsif updating then
+dbms_output.put_line('updating row');
+elsif deleting then
+dbms_output.put_line('deleting row');
+end if;
+end;
+/
+
+
+create table sal_details (empno number,sal number);
+
+
+create or replace trigger tr_update_sal after update on emp
+for each row
+begin
+insert into sal_details values(:old.empno,:new.sal);
+dbms_output.put_line('Added in sal details');
+end;
+/
+
+update emp set sal=sal+1000 where empno=7900;
+
+create or replace trigger tr_update_sal after update on emp
+for each row
+when (old.sal<>new.sal)
+begin
+insert into sal_details values(:old.empno,:new.sal);
+dbms_output.put_line('Added in sal details');
+end;
+/
+update emp set sal=sal+1000 ;
+********************************************************************************************
+REF CURSOR
+
+create or replace procedure ref_demo(c1 out sys_refcursor)
+as
+begin
+open c1 for select ename,sal from emp;
+end;
+/
+
+declare
+a sys_refcursor;
+l_name emp.ename%type;
+l_sal emp.sal%type;
+begin
+ref_demo(a);
+loop
+fetch a into l_name,l_sal;
+exit when a%notfound;
+dbms_output.put_line('name= '||l_name||'  sal= '||l_sal);
+end loop;
+end;
+/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+====================================================================================
+ASSIGNMENT
+====================================================================================
+Practice 1
+
+Create a user defined data type named “MARKS_TYPE” having the following subfields
+
+Column	Data type and size
+Subject	VARCHAR 2 (25)
+midTermMarks	NUMBER (3)
+annualMarks	NUMBER(3)
+
+Create an object table with name “MYMARKS” having a single column of type MARKS_TYPE.
+Insert any 3 records in the table with relevant data
+Fire an appropriate SELECT command to get midTermMarks and annualMarks for all records for the given subject
+===============>>>>
+
+create or replace type MARKS_TYPE as object
+(Subject VARCHAR2(25), midTermMarks NUMBER(3), annualMarks NUMBER(3) );
+/
+
+create table MYMARKS(Rollno number, name varchar2(20), marks MARKS_TYPE );
+
+insert into MYMARKS values(101, 'Ravi', MARKS_TYPE('Maths',29,65) );
+
+insert into MYMARKS values(102, 'Pari', MARKS_TYPE('Maths',28,67) );
+
+insert into MYMARKS values(103, 'Turu', MARKS_TYPE('Maths',27,65) );
+
+select name, m.marks.Subject, m.marks.midTermMarks,m.marks.annualMarks from MYMARKS m where m.Rollno=102;
+
+************************************************************************************************************
+Practice 2
+
+•	Create table “students” having the following design
+
+Column	Data type and size	Constraint
+studentName	VARCHAR 2 (25)	
+rollNo	NUMBER (3)	Primary Key
+Score	MARKS_TYPE	
+
+•	Insert any 3 relevant records in the table.
+•	Fire an appropriate SELECT query to get the score of a student with the given rollNO
+•	Fire an appropriate command to increase the annualMarks of the student with given rollNo by five marks
+====================>>>>>>
+
+create table students(rollNo number(3) primary key, Name varchar2(25), score MARKS_TYPE );
+
+insert into students values(101, 'Ravi', MARKS_TYPE('Maths',29,65) );
+
+insert into students values(102, 'Pari', MARKS_TYPE('Maths',28,67) );
+
+insert into students values(103, 'Turu', MARKS_TYPE('Maths',27,65) );
+
+select s.score.annualMarks from students s where s.Rollno=102;
+
+update students s set s.score.annualMarks=s.score.annualMarks+5 where s.rollNo=102;
+
+************************************************************************************************************
+Practice 3
+
+•	Create user defined data type named “ICECREAM_TYPE” with the following data members
+
+Column	Data type and size
+flovorNo	NUMBER(2)
+Fname	VARCHAR(10)
+Cost	NUMBER(3)
+Hastopping	CHAR(1)   
+Can be Y or N
+
+•	Create table named “menu” with the following design and insert five records into it.
+
+Column	Data type and size	Constraint
+MenuNo	NUMBER(2)	Primary key
+mainCourse	VARCHAR2(15)	Not Null
+Desert	ICECREAM_TYPE	
+Colddrink	CHAR(6)	
+
+
+•	Retrieve cost and name of an icecream from menu by specifying its flavor number.
+•	Update cost and maincourse column  from menu by specifying its MenuNo.
+===========>>>>>>>>
+
+create or replace type ICECREAM_TYPE as object
+(flavorNo number(2),Fname varchar2(10),Cost number(3),Hastopping char(1));
+/
+
+create table menu(MenuNo number(2) Primary key, mainCourse varchar2(15) Not Null,Desert ICECREAM_TYPE, Colddrink CHAR(6));
+
+insert into menu values(61,'Nonveg',ICECREAM_TYPE(11,'vanila', 100,'y'),'sprite');
+
+select m.Desert.Cost, m.Desert.Fname from menu m where m.Desert.flavorNo=11;
+
+update menu m set m.Desert.Cost=200 , m.mainCourse='veg' where m.MenuNo=61;
+
+************************************************************************************************************
+Collections
+
+
+Practice 1
+
+Create an object type named SKILLS_TYPE with the following subfields
+
+Skill_Id	NUMBER (2)
+Skill_Name	VARCHAR2(20)
+Skill_rating	NUMBER (2)
+ 
+
+Skill Rating can be between – 1 to 10.
+
+•	Create a nested table type SKILL_TAB_TYPE of the above mentioned SKILLS_TYPE.
+=============>>>>
+
+************************************************************************************************************
+
+Practice 2
+
+A.	Create an object type CUST_TAB with below attributes
+-	Cust_id
+-	Cust_Name
+-	Plan_Name
+B.	Create suitable collection type CUST_DETAILS of CUST_TAB type.
+One customer may have many plans .
+
+C.	Create a table Cust_Tab_details as follows :
+
+Columname                            	Constraint  	Datatype
+Srno                          	Primary Key            	  Number(10)
+Cust_Info                      	 	             CUST_DETAILS
+Cust_number	 	                                Number(10)
+		                             
+D.	 Insert 2 rows in the above table 
+Atleast 2 CUST_TAB entries per srno.
+E.	Write the select query to display Sr.no and Cust_info from cust_tab_detail table
+Note : Write SQL select command not the procedure.
+============>>>>
+
+create or replace type CUST_TAB as object 
+(cust_id number, cust_name varchar2(20), plan_name varchar2(20));
+/
+
+create type CUST_DETAILS as varray(5) of CUST_TAB;
+/
+
+create table Cust_Tab_details(Srno number primary key, Cust_Info CUST_DETAILS ,Cust_number number );
+
+insert into Cust_Tab_details values(1, CUST_DETAILS(CUST_TAB(11,'Ravi', 'A'), CUST_TAB(22,'Pari','B')),1200);
+
+declare
+details CUST_DETAILS;
+cursor c1 is select * from Cust_Tab_details;
+begin
+for v in c1
+loop
+	select Cust_Info into details from Cust_Tab_details where Srno=v.Srno;
+	for x in 1..details.count
+	loop
+	DBMS_OUTPUT.PUT_LINE('SR no= '||v.Srno||'cust id= '||details(x).cust_id||'cust name= '||details(x).cust_name||'plan name= '||details(x).plan_name);
+	end loop;
+end loop;
+end;
+/
+
+****************************************************************************************************************
+
+Practice 3
+
+
+•	Create a nested table type SKILL_TAB_TYPE of the above mentioned SKILL_TYPE type.
+
+•	Create a table EMPMAIN with the following structure:
+
+Emp_No	NUMBER (4)	PRIMARY KEY
+Emp_Name	CHAR (30)	
+All_Skills	SKILL_TAB_TYPE	
+
+     Give appropriate names for the corresponding storage tables
+•	Insert the following record in the table EMPMAIN. 
+Example:
+Emp_No	Emp_Name	All_Skills
+1001	Aman Dev	101	Design	9
+201	Code	10
+301	Test	8
+
+
+•	Insert 2-3 more records in EMPMAIN.
+•	Update the Skill Rating for Aman for Skill 301 to 9. (Use TABLE CLAUSE).
+•	Delete all the records where Skill Name is Null.
+•	Create a procedure named ADD_SKILL that will accept Emp_No  and skill details as parameters and add the skill details to the corresponding record from the EMPMAIN table. The procedure should handle all the probable errors by displaying the appropriate error messages on the screen.
+•	Give a call to ADD_SKILL from an anonymous PL/SQL block
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

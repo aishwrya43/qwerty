@@ -1,0 +1,377 @@
+program1
+
+	declare
+	         v_sal emp.sal%type;
+	         v_emp emp%rowtype;
+	begin
+	          select sal into v_sal from emp where empno=7844;
+	          select *  into v_emp from emp where empno=7844;
+	          dbms_output.put_line('val= '||v_sal);
+ 	           dbms_output.put_line('val= '||v_sal);
+	end;
+	/
+
+
+*******************************************************************************************
+CURSOR
+                       manipulating multiple rows
+********************************************************************************************
+******************************************************************************************
+Attibutes:
+
+1) %found---------- return boolean value
+2) %notfound
+3) %isopen
+4) %rowcount
+
+program2
+*******************************************************************************************
+	declare
+	        cursor c_emp is select * from emp;
+	        v_emp c_emp%rowtype;
+	begin
+	        open c_emp;
+	        for v_counter in 1..5
+	        loop
+	             fetch c_emp into v_emp;
+	            dbms_output.put_line('ename= '||v_emp.ename||'   sal= '||v_emp.sal||' Job Title '||v_emp.job||' row count= '||c_emp%rowcount);
+	        end loop;
+	        close c_emp;
+	end;
+	/
+
+program3
+********************************************************************************************
+
+	declare
+	        cursor c_emp is select * from emp;
+	        v_emp c_emp%rowtype;
+	begin
+	        open c_emp;
+	        loop
+	             fetch c_emp into v_emp;
+	             exit when c_emp%notfound;
+	             dbms_output.put_line('ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+	        end loop;
+	        if c_emp%isopen then
+	               dbms_output.put_line('closing cursor');
+	               close c_emp;
+	        end if;
+	end;
+	/
+
+program4
+*******************************************************************************************
+
+	declare
+	        cursor c_emp(p_deptno number) is select * from emp where deptno=p_deptno;
+	        v_emp c_emp%rowtype;
+	begin
+	        open c_emp(10);
+	        dbms_output.put_line('emp from deptno 10');
+	        loop
+	               fetch c_emp into v_emp;
+	               exit when c_emp%notfound;
+	               dbms_output.put_line('ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+	        end loop;
+	        if c_emp%isopen then
+	               dbms_output.put_line('closing cursor');
+	               close c_emp;
+	        end if;
+
+	        open c_emp(20);
+	        dbms_output.put_line('emp from deptno 20');
+	        loop
+	               fetch c_emp into v_emp;
+	               exit when c_emp%notfound;
+	               dbms_output.put_line('ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+	        end loop;
+	        if c_emp%isopen then
+	               dbms_output.put_line('closing cursor');
+	               close c_emp;
+	        end if;
+	
+	end;
+	/	
+
+
+program5
+***************************************************************************************************************************
+	
+	declare
+	        cursor c_emp(p_deptno number) is select * from emp where deptno=p_deptno;
+	begin	        
+	        dbms_output.put_line('emp from deptno 10');
+	        for v_emp in c_emp(10)
+	        loop	               
+	               dbms_output.put_line('ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+	        end loop;	       
+	       
+	        dbms_output.put_line('emp from deptno 20');
+	        for v_emp in c_emp(20)
+	        loop	              
+	               dbms_output.put_line('ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+	        end loop;      
+	end;
+	/	
+
+************************************************************************************************
+Implicit Cursor:::::::::::
+************************************************************************************************
+	begin
+	     update emp set sal=sal+1000 where deptno=10;
+	     if SQL%found then
+		dbms_output.put_line('no of record updated= '||SQL%rowcount);
+	     else
+		dbms_output.put_line('records are not updated');
+	     end if;
+	end;
+	/
+
+
+************************************************************************************************
+Explicit Cursor:::::::::::(FOR UPDATE ...................CURRENT)
+************************************************************************************************
+	declare
+		cursor c_emp is select * from emp for update;
+	begin
+	for v_emp in c_emp
+	loop
+		if v_emp.deptno=10 then
+			update emp set sal=sal*110/100 where current of c_emp;
+			dbms_output.put_line('For dept 10 ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+		elsif v_emp.deptno=20 then
+			update emp set sal=sal*120/100 where current of c_emp;
+			dbms_output.put_line('For dept 20 ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+		else
+			update emp set sal=sal*130/100 where current of c_emp;
+			dbms_output.put_line('For dept 30 ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+		end if;
+	end loop;
+	end;
+	/
+
+
+
+update emp set deptno=40 where sal=950;
+
+
+
+select deptno, sal from emp;
+
+
+
+
+if v_emp.deptno=30 then
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+:::::::::::::::::::::ASSIGNMENT:::::::::::::::::::::
+
+
+1).....
+	
+	declare
+	        dpno number:=&num1;
+	        cursor c_emp(dpno number ) is select * from emp for update;
+	       
+	        row_count number:=0; 
+	begin	        
+	        
+	        for v_emp in c_emp(dpno)
+	        loop	
+	                update emp set sal=sal*110/100 where current of c_emp;               
+	               dbms_output.put_line('ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+	                row_count:=c_emp%rowcount;
+	        end loop;	       
+	        dbms_output.put_line('No. of Updated rows= '||row_count);	         
+	end;
+	/	
+=====================================================================================
+
+2).....
+
+ 	*****************Normal For Loop*********************
+	declare
+	     cursor c_emp is select * from emp;
+	     v_emp  c_emp%rowtype;
+	begin
+	     open c_emp;
+	     for i in 1..5
+	     loop
+ 	              fetch c_emp into v_emp;
+	             dbms_output.put_line(' Name=  '||v_emp.ename||'  Salary=  '||v_emp.sal||'  Job Title=  '||v_emp.job);
+	    end loop;
+	     close c_emp;
+	end;
+	/
+
+
+	**************** Loop------ Exit When()*********************
+	declare
+	     cursor c_emp is select * from emp;
+                         v_emp  c_emp%rowtype;
+	      i number:=1;
+	begin
+	     open c_emp;
+	     loop
+	              i:=i+1;
+	              fetch c_emp into v_emp;
+	             dbms_output.put_line(' Name=  '||v_emp.ename||'  Salary=  '||v_emp.sal||'  Job Title=  '||v_emp.job);
+	             exit when(i>5);
+	    end loop;
+	    close c_emp;
+	end;
+	/
+
+	*****************While Loop*********************
+	declare
+	     cursor c_emp is select * from emp;
+	     v_emp  c_emp%rowtype;
+	      i number:=1;
+	begin
+	     open c_emp;
+	     while(i<6)
+	     loop
+ 	              fetch c_emp into v_emp;
+	             dbms_output.put_line(' Name=  '||v_emp.ename||'  Salary=  '||v_emp.sal||'  Job Title=  '||v_emp.job);
+	              i:=i+1;
+	    end loop;
+	     close c_emp;
+	end;
+	/
+
+	*****************Cursor For Loop*********************
+	declare
+	     cursor c_emp is select * from emp;
+	begin
+	     for v_emp in c_emp
+	     loop
+	             dbms_output.put_line(' Name=  '||v_emp.ename||'  Salary=  '||v_emp.sal||'  Job Title=  '||v_emp.job);
+		if c_emp%rowcount=5 then
+		break;
+                                        end if;
+	    end loop;
+	end;
+	/
+======================================================================================
+
+3)•	Write a PL/SQL block that displays names and salaries of all “Programmer” recorded in the employees table by making use of a cursor.
+
+	declare
+	     cursor c_emp is select ename, sal ,job from emp where job='CLERK';
+	begin
+	     for v_emp in c_emp
+	       loop
+		dbms_output.put_line(' Name=  '||v_emp.ename||'  Salary=  '||v_emp.sal||'  Job Title=  '||v_emp.job);
+	       end loop;
+		
+	end;
+	/
+======================================================================================
+
+4)•	Write a PL/SQL block that accepts a value of a job_id from user and displays the full names, department numbers and salaries of the employees from the “employees” table having that job. The block makes use of a parameterized cursor. The user input is passed on to the cursor as a parameter. 
+
+	declare
+	      dpno number:=&num1;
+	      cursor c_emp(dpno number ) is select * from emp where deptno=dpno;
+	      v_emp emp%rowtype;
+	begin
+	      open c_emp(dpno);
+	      loop
+		fetch c_emp into v_emp;
+		dbms_output.put_line(' Name=  '||v_emp.ename||'  Salary=  '||v_emp.sal||'  Job Title=  '||v_emp.job);
+	      	exit when c_emp%notfound;
+	     end loop;
+                         close c_emp;
+	end;
+	/      
+
+	
+======================================================================================
+5)	
+	declare
+		cursor c_emp is select * from emp for update;
+	begin
+	for v_emp in c_emp
+	loop
+		if v_emp.deptno=10 and v_emp.job='CLERK' then
+			update emp set sal=sal*110/100 where current of c_emp;
+			dbms_output.put_line('For dept 10 ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+		elsif v_emp.deptno=20 and v_emp.job='MANAGER' then
+			update emp set sal=sal*120/100 where current of c_emp;
+			dbms_output.put_line('For dept 20 ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+		else
+			update emp set sal=sal*130/100 where current of c_emp;
+			dbms_output.put_line(' ename= '||v_emp.ename||'   sal= '||v_emp.sal||'  row count= '||c_emp%rowcount);
+		end if;
+	end loop;
+	end;
+	/
+
+======================================================================================
+6)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
